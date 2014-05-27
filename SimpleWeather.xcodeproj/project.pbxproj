@@ -20,7 +20,6 @@
 		D168CE581933C19A00ECBC23 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D168CE401933C19A00ECBC23 /* UIKit.framework */; };
 		D168CE601933C19A00ECBC23 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = D168CE5E1933C19A00ECBC23 /* InfoPlist.strings */; };
 		D168CE621933C19A00ECBC23 /* SimpleWeatherTests.m in Sources */ = {isa = PBXBuildFile; fileRef = D168CE611933C19A00ECBC23 /* SimpleWeatherTests.m */; };
-		D16B50CB1933C47C009F390F /* WXViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D16B50CA1933C47C009F390F /* WXViewController.m */; };
 		D16B50E81933C631009F390F /* bg.png in Resources */ = {isa = PBXBuildFile; fileRef = D16B50CD1933C631009F390F /* bg.png */; };
 		D16B50E91933C631009F390F /* bg@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = D16B50CE1933C631009F390F /* bg@2x.png */; };
 		D16B50EA1933C631009F390F /* weather-broken.png in Resources */ = {isa = PBXBuildFile; fileRef = D16B50D01933C631009F390F /* weather-broken.png */; };
@@ -51,6 +50,7 @@
 		D16B51071933D324009F390F /* WXManager.m in Sources */ = {isa = PBXBuildFile; fileRef = D16B51061933D324009F390F /* WXManager.m */; };
 		D16B510A1933D335009F390F /* WXCondition.m in Sources */ = {isa = PBXBuildFile; fileRef = D16B51091933D335009F390F /* WXCondition.m */; };
 		D16B510D1933D34C009F390F /* WXDailyForecast.m in Sources */ = {isa = PBXBuildFile; fileRef = D16B510C1933D34C009F390F /* WXDailyForecast.m */; };
+		D17C30ED1933F750000755B4 /* WXViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D17C30EB1933F750000755B4 /* WXViewController.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,8 +82,6 @@
 		D168CE5D1933C19A00ECBC23 /* SimpleWeatherTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "SimpleWeatherTests-Info.plist"; sourceTree = "<group>"; };
 		D168CE5F1933C19A00ECBC23 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		D168CE611933C19A00ECBC23 /* SimpleWeatherTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SimpleWeatherTests.m; sourceTree = "<group>"; };
-		D16B50C91933C47C009F390F /* WXViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = WXViewController.h; path = ../WXViewController.h; sourceTree = "<group>"; };
-		D16B50CA1933C47C009F390F /* WXViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = WXViewController.m; path = ../WXViewController.m; sourceTree = "<group>"; };
 		D16B50CD1933C631009F390F /* bg.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = bg.png; sourceTree = "<group>"; };
 		D16B50CE1933C631009F390F /* bg@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bg@2x.png"; sourceTree = "<group>"; };
 		D16B50D01933C631009F390F /* weather-broken.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "weather-broken.png"; sourceTree = "<group>"; };
@@ -118,6 +116,8 @@
 		D16B51091933D335009F390F /* WXCondition.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WXCondition.m; sourceTree = "<group>"; };
 		D16B510B1933D34C009F390F /* WXDailyForecast.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WXDailyForecast.h; sourceTree = "<group>"; };
 		D16B510C1933D34C009F390F /* WXDailyForecast.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WXDailyForecast.m; sourceTree = "<group>"; };
+		D17C30EB1933F750000755B4 /* WXViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WXViewController.m; sourceTree = "<group>"; };
+		D17C30EC1933F750000755B4 /* WXViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WXViewController.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -180,10 +180,10 @@
 		D168CE421933C19A00ECBC23 /* SimpleWeather */ = {
 			isa = PBXGroup;
 			children = (
+				D17C30EC1933F750000755B4 /* WXViewController.h */,
+				D17C30EB1933F750000755B4 /* WXViewController.m */,
 				D168CE4B1933C19A00ECBC23 /* AppDelegate.h */,
 				D168CE4C1933C19A00ECBC23 /* AppDelegate.m */,
-				D16B50C91933C47C009F390F /* WXViewController.h */,
-				D16B50CA1933C47C009F390F /* WXViewController.m */,
 				D16B51021933D318009F390F /* WXClient.h */,
 				D16B51031933D318009F390F /* WXClient.m */,
 				D16B51051933D324009F390F /* WXManager.h */,
@@ -426,10 +426,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				D16B51071933D324009F390F /* WXManager.m in Sources */,
+				D17C30ED1933F750000755B4 /* WXViewController.m in Sources */,
 				D16B510D1933D34C009F390F /* WXDailyForecast.m in Sources */,
 				D168CE4D1933C19A00ECBC23 /* AppDelegate.m in Sources */,
 				D168CE491933C19A00ECBC23 /* main.m in Sources */,
-				D16B50CB1933C47C009F390F /* WXViewController.m in Sources */,
 				D16B510A1933D335009F390F /* WXCondition.m in Sources */,
 				D16B51041933D318009F390F /* WXClient.m in Sources */,
 			);

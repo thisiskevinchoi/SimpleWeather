@@ -8,6 +8,7 @@
 
 #import "WXViewController.h"
 
+#import "WXManager.h"
 #import <LBBlurredImage/UIImageView+LBBlurredImage.h>
 
 @interface WXViewController ()
@@ -17,9 +18,23 @@
 @property (nonatomic, strong) UITableView *tableView;
 @property (nonatomic, assign) CGFloat screenHeight;
 
+@property (nonatomic, strong) NSDateFormatter *hourlyFormatter;
+@property (nonatomic, strong) NSDateFormatter *dailyFormatter;
+
 @end
 
 @implementation WXViewController
+
+- (id)init {
+    if (self = [super init]) {
+        _hourlyFormatter = [[NSDateFormatter alloc] init];
+        _hourlyFormatter.dateFormat = @"h a";
+        
+        _dailyFormatter = [[NSDateFormatter alloc] init];
+        _dailyFormatter.dateFormat = @"EEEE";
+    }
+    return self;
+}
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -140,6 +155,46 @@
     iconView.contentMode = UIViewContentModeScaleAspectFit;
     iconView.backgroundColor = [UIColor clearColor];
     [header addSubview:iconView];
+    
+    // Observes the currentCondition key on the WXManager singleton
+    [[RACObserve([WXManager sharedManager], currentCondition)
+      // Delivers any changes on the main thread since you’re updating the UI
+      deliverOn:RACScheduler.mainThreadScheduler]
+     subscribeNext:^(WXCondition *newCondition) {
+         // Updates the text labels with weather data; you’re using newCondition for the text and not the singleton. The subscriber parameter is guaranteed to be the new value
+         temperatureLabel.text = [NSString stringWithFormat:@"%.0f°",newCondition.temperature.floatValue];
+         conditionsLabel.text = [newCondition.condition capitalizedString];
+         cityLabel.text = [newCondition.locationName capitalizedString];
+         
+         // Uses the mapped image file name to create an image and sets it as the icon for the view
+         iconView.image = [UIImage imageNamed:[newCondition imageName]];
+     }];
+    
+    // The RAC(…) macro helps keep syntax clean. The returned value from the signal is assigned to the text key of the hiloLabel object
+    RAC(hiloLabel, text) = [[RACSignal combineLatest:@[
+                                                       // Observe the high and low temperatures of the currentCondition key. Combine the signals and use the latest values for both. The signal fires when either key changes
+                                                       RACObserve([WXManager sharedManager], currentCondition.tempHigh),
+                                                       RACObserve([WXManager sharedManager], currentCondition.tempLow)]
+                             // Reduce the values from your combined signals into a single value; note that the parameter order matches the order of your signals
+                                              reduce:^(NSNumber *hi, NSNumber *low) {
+                                                  return [NSString  stringWithFormat:@"%.0f° / %.0f°",hi.floatValue,low.floatValue];
+                                              }]
+                            // Again, since you’re working on the UI, deliver everything on the main thread
+                            deliverOn:RACScheduler.mainThreadScheduler];
+    
+    [[WXManager sharedManager] findCurrentLocation];
+    
+    [[RACObserve([WXManager sharedManager], hourlyForecast)
+      deliverOn:RACScheduler.mainThreadScheduler]
+     subscribeNext:^(NSArray *newForecast) {
+         [self.tableView reloadData];
+     }];
+    
+    [[RACObserve([WXManager sharedManager], dailyForecast)
+      deliverOn:RACScheduler.mainThreadScheduler]
+     subscribeNext:^(NSArray *newForecast) {
+         [self.tableView reloadData];
+     }];
 }
 
 - (void)viewWillLayoutSubviews {
@@ -163,6 +218,35 @@
     // Dispose of any resources that can be recreated.
 }
 
+// Configures and adds text to the cell used as the section header. You’ll reuse this for daily and hourly forecast sections
+- (void)configureHeaderCell:(UITableViewCell *)cell title:(NSString *)title {
+    cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Medium" size:18];
+    cell.textLabel.text = title;
+    cell.detailTextLabel.text = @"";
+    cell.imageView.image = nil;
+}
+
+// Formats the cell for an hourly forecast
+- (void)configureHourlyCell:(UITableViewCell *)cell weather:(WXCondition *)weather {
+    cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
+    cell.detailTextLabel.font = [UIFont fontWithName:@"HelveticaNeue-Medium" size:18];
+    cell.textLabel.text = [self.hourlyFormatter stringFromDate:weather.date];
+    cell.detailTextLabel.text = [NSString stringWithFormat:@"%.0f°",weather.temperature.floatValue];
+    cell.imageView.image = [UIImage imageNamed:[weather imageName]];
+    cell.imageView.contentMode = UIViewContentModeScaleAspectFit;
+}
+
+// Formats the cell for a daily forecast
+- (void)configureDailyCell:(UITableViewCell *)cell weather:(WXCondition *)weather {
+    cell.textLabel.font = [UIFont fontWithName:@"HelveticaNeue-Light" size:18];
+    cell.detailTextLabel.font = [UIFont fontWithName:@"HelveticaNeue-Medium" size:18];
+    cell.textLabel.text = [self.dailyFormatter stringFromDate:weather.date];
+    cell.detailTextLabel.text = [NSString stringWithFormat:@"%.0f° / %.0f°",
+                                 weather.tempHigh.floatValue,
+                                 weather.tempLow.floatValue];
+    cell.imageView.image = [UIImage imageNamed:[weather imageName]];
+    cell.imageView.contentMode = UIViewContentModeScaleAspectFit;
+}
 
 #pragma mark - UITableViewDataSource
 
@@ -171,7 +255,12 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    // TODO: Return count of forecast
+    // For the hourly forecast. Use the six latest hourly forecasts and add one more cell for the header
+    if (section == 0) {
+        return MIN([[WXManager sharedManager].hourlyForecast count], 6) + 1;
+    }
+    // For daily forecasts. Use the six latest daily forecasts and add one more cell for the header
+    return MIN([[WXManager sharedManager].dailyForecast count], 6) + 1;
     return 0;
 }
 
@@ -183,22 +272,42 @@
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:CellIdentifier];
     }
     
-    // 3
+    // Edit cell selection style so that user cannot click cell
     cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.backgroundColor = [UIColor colorWithWhite:0 alpha:0.2];
     cell.textLabel.textColor = [UIColor whiteColor];
     cell.detailTextLabel.textColor = [UIColor whiteColor];
     
-    // TODO: Setup the cell
-    
+    if (indexPath.section == 0) {
+        // The first row of each section is the header cell
+        if (indexPath.row == 0) {
+            [self configureHeaderCell:cell title:@"Hourly Forecast"];
+        }
+        else {
+            // Get the hourly weather and configure the cell using custom configure methods
+            WXCondition *weather = [WXManager sharedManager].hourlyForecast[indexPath.row - 1];
+            [self configureHourlyCell:cell weather:weather];
+        }
+    }
+    else if (indexPath.section == 1) {
+        // The first row of each section is the header cell
+        if (indexPath.row == 0) {
+            [self configureHeaderCell:cell title:@"Daily Forecast"];
+        }
+        else {
+            // Get the daily weather and configure the cell using another custom configure method
+            WXCondition *weather = [WXManager sharedManager].dailyForecast[indexPath.row - 1];
+            [self configureDailyCell:cell weather:weather];
+        }
+    }
     return cell;
 }
 
 #pragma mark - UITableViewDelegate
 
 - (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {
-    // TODO: Determine cell height based on screen
-    return 44;
+    NSInteger cellCount = [self tableView:tableView numberOfRowsInSection:indexPath.section];
+    return self.screenHeight / (CGFloat)cellCount;
 }
 
 /*
@@ -212,4 +321,15 @@
 }
 */
 
+#pragma mark - UIScrollViewDelegate
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView {
+    // Get the height of the scroll view and the content offset. Cap the offset at 0 so attempting to scroll past the start of the table won’t affect blurring
+    CGFloat height = scrollView.bounds.size.height;
+    CGFloat position = MAX(scrollView.contentOffset.y, 0.0);
+    // Divide the offset by the height with a maximum of 1 so that your offset is capped at 100%
+    CGFloat percent = MIN(position / height, 1.0);
+    // Assign the resulting value to the blur image’s alpha property to change how much of the blurred image you’ll see as you scroll
+    self.blurredImageView.alpha = percent;
+}
 @end
